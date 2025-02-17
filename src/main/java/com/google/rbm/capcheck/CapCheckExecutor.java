@@ -119,10 +119,13 @@ public class CapCheckExecutor implements Runnable {
         System.exit(0);
       }
 
-      // Calculate the split for threads
-      int sizeOfChunk = phoneNumbers.size() / threadCount;
+      // Calculate the split for threads, making sure that sizeOfChunk is not less than MIN_DEVICES
+      int sizeOfChunk = totalInputUsers / threadCount;
+      while (threadCount > 1 && sizeOfChunk < MIN_DEVICES) {
+        threadCount--;
+        sizeOfChunk = totalInputUsers / threadCount;
+      }
       int index = 0;
-      int i = 0;
 
       // Time before capability check
       long startTime = System.currentTimeMillis() / 1000;
@@ -135,13 +138,18 @@ public class CapCheckExecutor implements Runnable {
           NumberFormat.getNumberInstance(Locale.US).format(phoneNumbers.size())));
 
       // Create and start capability check threads
-      while (index < phoneNumbers.size()) {
-        List<String> subList = new ArrayList<>(phoneNumbers.subList(index,
-            Math.min(index + sizeOfChunk, totalInputUsers)));
-
-        capCheckTasks.add(new CapCheckExecutor(subList));
-
-        index += sizeOfChunk;
+      for (int i = 0; i < threadCount; ++i) {
+        if (i < threadCount - 1) {
+          List<String> subList = new ArrayList<>(phoneNumbers.subList(index,
+              Math.min(index + sizeOfChunk, totalInputUsers)));
+          capCheckTasks.add(new CapCheckExecutor(subList));
+          index += sizeOfChunk;
+        } else {
+          // The final thread should include any remainder from the integer division used to calculate sizeOfChunk
+          List<String> subList = new ArrayList<>(phoneNumbers.subList(index,
+              totalInputUsers));
+          capCheckTasks.add(new CapCheckExecutor(subList));
+        }
       }
 
       // Run all threads and block until all capability checks are complete
@@ -289,10 +297,24 @@ public class CapCheckExecutor implements Runnable {
    */
   private List<BatchGetUsersResponse> getUsers(List<String> phoneNumbers) throws Exception {
     List<BatchGetUsersResponse> usersResponses = new ArrayList<>();
+       
+    // Determine the largest batch size which avoids a final batch with less than 500 users
+    int size = phoneNumbers.size ();
+    int batch_size = MAX_DEVICES;
+    int remainder = size % batch_size;
+    while (batch_size >= MIN_DEVICES && remainder > 0 && remainder < MIN_DEVICES) {
+      batch_size--;
+      remainder = size % batch_size;
+    }
+    if (batch_size < MIN_DEVICES) {
+      // No suitable value for batch_size was found so use the default
+      batch_size = MIN_DEVICES;
+    }
+
     int index = 0;
     while (index < phoneNumbers.size()) {
       List<String> subList = new ArrayList<>(phoneNumbers.subList(index,
-          Math.min(index + MAX_DEVICES, phoneNumbers.size())));
+          Math.min(index + batch_size, phoneNumbers.size())));
 
       System.out.print(".");
 
