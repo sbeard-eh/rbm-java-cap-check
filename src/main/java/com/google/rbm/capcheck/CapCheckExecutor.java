@@ -318,7 +318,7 @@ public class CapCheckExecutor implements Runnable {
 
       System.out.print(".");
 
-      index += MAX_DEVICES;
+      index += batch_size;
 
       usersResponses.add(rbmApiHelper.getUsers(subList));
     }
