@@ -18,8 +18,8 @@ package com.google.rbm.capcheck;
 
 // [START import_libraries]
 
-import com.google.api.services.rcsbusinessmessaging.v1.RbmApiHelper;
-import com.google.api.services.rcsbusinessmessaging.v1.model.BatchGetUsersResponse;
+import com.google.rcsbusinessmessaging.v1.RbmApiHelper;
+import com.google.rcsbusinessmessaging.v1.model.BatchGetUsersResponse;
 
 import java.io.*;
 import java.text.NumberFormat;
@@ -43,6 +43,9 @@ import java.util.stream.Collectors;
  * see README.md for more details.
  */
 public class CapCheckExecutor implements Runnable {
+  // Provide your agent id (the part before @rbm.goog) 
+  private static final String AGENTID = "SET AGENT ID HERE";
+     
   private static final Logger logger = Logger.getLogger(CapCheckExecutor.class.getName());
 
   private static final String EXCEPTION_WAS_THROWN = "an exception was thrown";
@@ -102,9 +105,8 @@ public class CapCheckExecutor implements Runnable {
 
     try {
       // Create static reference to the RBM API helper class to be used across all threads
-      Class<? extends CapCheckExecutor> aClass = CapCheckExecutor.class;
-      rbmApiHelper = new RbmApiHelper(new File(aClass
-          .getClassLoader().getResource("rbm-agent-service-account-credentials.json").getFile()));
+      rbmApiHelper = new RbmApiHelper();
+      rbmApiHelper.setAgentId (AGENTID);
 
       // Read devices
       List<String> phoneNumbers = readDevices(startIndex, endIndex, inputFileLocation);
@@ -320,7 +322,7 @@ public class CapCheckExecutor implements Runnable {
 
       index += batch_size;
 
-      usersResponses.add(rbmApiHelper.getUsers(subList));
+      usersResponses.add(rbmApiHelper.batchGet(subList));
     }
 
     return usersResponses;
