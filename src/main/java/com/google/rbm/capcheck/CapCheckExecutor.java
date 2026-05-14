@@ -42,10 +42,7 @@ import java.util.stream.Collectors;
  * To execute: mvn compile && mvn exec:java -Dexec.args="INPUT_FILE OUTPUT_FILE NUM_OF_THREADS START_INDEX END_INDEX",
  * see README.md for more details.
  */
-public class CapCheckExecutor implements Runnable {
-  // Provide your agent id (the part before @rbm.goog) 
-  private static final String AGENTID = "SET AGENT ID HERE";
-     
+public class CapCheckExecutor implements Runnable {     
   private static final Logger logger = Logger.getLogger(CapCheckExecutor.class.getName());
 
   private static final String EXCEPTION_WAS_THROWN = "an exception was thrown";
@@ -77,36 +74,37 @@ public class CapCheckExecutor implements Runnable {
 
   // [START run_application]
   public static void main(String[] args) {
-    if (!(args.length >= 2 && args.length <= 5)) {
+    if (!(args.length >= 3 && args.length <= 6)) {
       logger.info("Usage: mvn exec:java " +
-          "-Dexec.args=\"<INPUT_CSV_FILE_LOCATION> <OUTPUT_CSV_FILE_LOCATION> <THREADS> <START_INDEX> <END_INDEX>\"");
+          "-Dexec.args=\"<AGENT_ID> <INPUT_CSV_FILE_LOCATION> <OUTPUT_CSV_FILE_LOCATION> <THREADS> <START_INDEX> <END_INDEX>\"");
 
       System.exit(-1);
     }
 
     // Parse the input arguments
-    String inputFileLocation = args[0];
-    String outputFileLocation = args[1];
+    String agentId = args[0];
+    String inputFileLocation = args[1];
+    String outputFileLocation = args[2];
 
     int threadCount = DEFAULT_THREAD_COUNT;
-    if (args.length >= 3) {
-      threadCount = Integer.parseInt(args[2]);
+    if (args.length >= 4) {
+      threadCount = Integer.parseInt(args[3]);
     }
 
     int startIndex = 0;
-    if (args.length >= 4) {
-      startIndex = Integer.parseInt(args[3]);
+    if (args.length >= 5) {
+      startIndex = Integer.parseInt(args[4]);
     }
 
     int endIndex = Integer.MAX_VALUE;
-    if (args.length == 5) {
-      endIndex = Integer.parseInt(args[4]);
+    if (args.length == 6) {
+      endIndex = Integer.parseInt(args[5]);
     }
 
     try {
       // Create static reference to the RBM API helper class to be used across all threads
       rbmApiHelper = new RbmApiHelper();
-      rbmApiHelper.setAgentId (AGENTID);
+      rbmApiHelper.setAgentId(agentId);
 
       // Read devices
       List<String> phoneNumbers = readDevices(startIndex, endIndex, inputFileLocation);
