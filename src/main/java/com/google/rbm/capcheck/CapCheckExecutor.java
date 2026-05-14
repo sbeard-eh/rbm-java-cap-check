@@ -18,7 +18,7 @@ package com.google.rbm.capcheck;
 
 // [START import_libraries]
 
-import com.google.rcsbusinessmessaging.v1.RbmApiHelper;
+import com.google.rbm.RbmApiHelper;
 import com.google.rcsbusinessmessaging.v1.model.BatchGetUsersResponse;
 
 import java.io.*;
